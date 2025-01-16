@@ -1,7 +1,8 @@
 use cosmwasm_std::{Addr, StdResult, Storage};
-use cosmwasm_storage::{singleton, singleton_read, Singleton};
+use cw_storage_plus::{singleton, singleton_read, Singleton};
+use oasis_std::abi::{Deserialize, Serialize};
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::ser::{Deserialize, Serialize};
 
 static CONFIG_KEY: &[u8] = b"config";
 static FILES_KEY: &[u8] = b"files";

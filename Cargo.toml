@@ -3,4 +3,5 @@ members = [
     "contracts/cos",
     "contracts/met",
     "contracts/hic",
+    "contracts/space",
 ]

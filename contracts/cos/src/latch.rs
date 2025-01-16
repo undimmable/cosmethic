@@ -34,6 +34,13 @@ pub fn execute(
     }
 }
 
+#[entry_point]
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+    match msg.action {
+        QueryAction::GetVotes {} => to_binary(&get_votes(deps)),
+    }
+}
+
 fn submit_vote(
     deps: DepsMut,
     _info: MessageInfo,
@@ -60,6 +67,7 @@ fn submit_vote(
     deps.storage.set(b"votes", &to_binary(&votes)?);
     Ok(Response::default())
 }
+
 
 fn validate(scenario: &String, budget: u128, mut votes: &mut Votes, total_budget: u128) -> Option<StdResult<Response>> {
     if total_budget + budget > MAX_BUDGET {
@@ -137,13 +145,100 @@ fn check_has_budget(budget: u128) -> Option<StdResult<Response>> {
     None
 }
 
-#[entry_point]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
-    match msg.action {
-        QueryAction::GetVotes {} => to_binary(&get_votes(deps)),
-    }
-}
-
 fn get_votes(deps: Deps) -> Vec<u8> {
     deps.storage.get(b"votes").unwrap_or_default()
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use cosmwasm_std::{
+        from_binary,
+        testing::{mock_dependencies, mock_env, mock_info},
+    };
+
+    #[test]
+    fn test_instantiate() {
+        let mut deps = mock_dependencies();
+
+        let msg = InstantiateMsg {
+            scenarios: vec!["Scenario 1".to_string(), "Scenario 2".to_string()],
+        };
+        let info = mock_info("creator", &[]);
+
+        let res = instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+        assert_eq!(res.attributes[0].value, "instantiate");
+
+        let votes = load_votes(&deps.storage).unwrap();
+        assert_eq!(votes.scenario_votes.len(), 2);
+        assert_eq!(votes.scenario_votes[0], ("Scenario 1".to_string(), 0));
+    }
+
+    #[test]
+    fn test_submit_vote() {
+        let mut deps = mock_dependencies();
+
+        // Инициализация
+        let msg = InstantiateMsg {
+            scenarios: vec!["Scenario 1".to_string(), "Scenario 2".to_string()],
+        };
+        let info = mock_info("creator", &[]);
+        instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        // Успешное голосование
+        let vote_msg = ExecuteMsg {
+            action: Action::SubmitVote {
+                scenario: "Scenario 1".to_string(),
+                budget: 100,
+            },
+        };
+        let info = mock_info("voter1", &[]);
+        let res = execute(deps.as_mut(), mock_env(), info, vote_msg).unwrap();
+        assert_eq!(res.attributes[0].value, "submit_vote");
+
+        let votes = load_votes(&deps.storage).unwrap();
+        assert_eq!(votes.scenario_votes[0], ("Scenario 1".to_string(), 100));
+
+        // Ошибка: превышение бюджета
+        let vote_msg = ExecuteMsg {
+            action: Action::SubmitVote {
+                scenario: "Scenario 2".to_string(),
+                budget: 1001,
+            },
+        };
+        let info = mock_info("voter2", &[]);
+        let err = execute(deps.as_mut(), mock_env(), info, vote_msg).unwrap_err();
+        assert_eq!(err.to_string(), ERR_BUDGET_EXCEEDED);
+
+        // Ошибка: голос за несуществующий сценарий
+        let vote_msg = ExecuteMsg {
+            action: Action::SubmitVote {
+                scenario: "Invalid".to_string(),
+                budget: 50,
+            },
+        };
+        let err = execute(deps.as_mut(), mock_env(), info, vote_msg).unwrap_err();
+        assert_eq!(err.to_string(), ERR_SCENARIO_NOT_FOUND);
+    }
+
+    #[test]
+    fn test_query_votes() {
+        let mut deps = mock_dependencies();
+
+        let msg = InstantiateMsg {
+            scenarios: vec!["Scenario 1".to_string(), "Scenario 2".to_string()],
+        };
+        let info = mock_info("creator", &[]);
+        instantiate(deps.as_mut(), mock_env(), info, msg).unwrap();
+
+        let query_msg = QueryMsg {
+            action: QueryAction::GetVotes,
+        };
+        let bin = query(deps.as_ref(), mock_env(), query_msg).unwrap();
+        let votes: Votes = from_binary(&bin).unwrap();
+
+        assert_eq!(votes.scenario_votes.len(), 2);
+        assert_eq!(votes.scenario_votes[0], ("Scenario 1".to_string(), 0));
+    }
 }
