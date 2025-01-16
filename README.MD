@@ -9,7 +9,7 @@ This project demonstrates the use of smart contracts to manage a graph of interc
 1. Clone the repository:
 ```zsh
 git clone https://github.com/undimmable/cosmethic.git
-cd cosmetic
+cd cosmethic
 ```
 
 2. Build
