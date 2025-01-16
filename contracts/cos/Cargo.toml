@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-cosmwasm-std = "0.16"
-cosmwasm-storage = "0.16"
-cw-storage-plus = "0.16"
+cosmwasm-std = "0.16.0"
+cosmwasm-storage = "0.16.0"
+cw-storage-plus = "0.16.0"
 schemars = "0.8"
 serde = { version = "1.0", features = ["derive"] }
 
 [dev-dependencies]
-cosmwasm-schema = "0.16"
-cosmwasm-vm = "0.16"
+cosmwasm-schema = "0.16.0"
+cosmwasm-vm = "0.16.0"

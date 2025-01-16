@@ -1,41 +1,11 @@
+use crate::msg::{Action, ExecuteMsg, InstantiateMsg, QueryAction, QueryMsg, Votes};
 use cosmwasm_std::StdError;
 use cosmwasm_std::{
     entry_point, from_binary, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     StdResult,
 };
-use serde::{Deserialize, Serialize};
 
 pub const MAX_BUDGET: u128 = 1000;
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct InstantiateMsg {
-    pub scenarios: Vec<String>, // список сценариев
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct ExecuteMsg {
-    pub action: Action,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub enum Action {
-    SubmitVote { scenario: String, budget: u128 }, // голосование
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct QueryMsg {
-    pub action: QueryAction,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub enum QueryAction {
-    GetVotes {}, // query votes
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
-pub struct Votes {
-    pub scenario_votes: Vec<(String, u128)>, // scenarios and budgets list
-}
 
 #[entry_point]
 pub fn instantiate(
