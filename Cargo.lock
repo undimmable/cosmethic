@@ -342,6 +342,7 @@ dependencies = [
  "cw-storage-plus",
  "schemars 0.8.21",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -633,6 +634,15 @@ dependencies = [
  "lock_api",
  "once_cell",
  "parking_lot_core",
+]
+
+[[package]]
+name = "democracy"
+version = "0.1.0"
+dependencies = [
+ "cosmwasm-std",
+ "schemars 0.8.21",
+ "serde",
 ]
 
 [[package]]

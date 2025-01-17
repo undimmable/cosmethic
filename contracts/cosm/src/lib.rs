@@ -1,3 +1,4 @@
+mod msg;
+mod state;
 pub mod latch;
-pub mod dao;
-pub mod msg;
+mod error;

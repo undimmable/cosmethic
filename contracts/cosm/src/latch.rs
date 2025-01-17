@@ -1,26 +1,7 @@
+use crate::error::ContractError;
+use crate::state::{Config, Latch, CONFIG, LATCHES};
 use cosmwasm_std::{DepsMut, Env, MessageInfo, Response, StdError, StdResult};
-use cw_storage_plus::{Item, Map};
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Latch {
-    pub id: String,
-    pub threshold: u64, // Required votes
-    pub votes: u64,     // Current votes
-    pub participants: Vec<String>, // Addresses of participants
-    pub is_open: bool,  // Whether latch is open
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Config {
-    pub roles: Map<String, String>, // Role assignments (address -> role)
-    pub latch_actors: Map<String, String>, // Sync state for latch actors
-}
-
-// State storage
-pub const LATCHES: Map<String, Latch> = Map::new("latches");
-pub const CONFIG: Item<Config> = Item::new("config");
+use cw_storage_plus::Map;
 
 // Create a new latch
 pub fn create_latch(
@@ -41,17 +22,14 @@ pub fn create_latch(
 
     // Save latch
     LATCHES.save(deps.storage, &id, &latch)?;
-    Ok(Response::new().add_attribute("method", "create_latch").add_attribute("latch_id", id))
+    Ok(Response::new()
+        .add_attribute("method", "create_latch")
+        .add_attribute("latch_id", id))
 }
 
 // Cast a vote
-pub fn vote(
-    deps: DepsMut,
-    _env: Env,
-    info: MessageInfo,
-    latch_id: String,
-) -> StdResult<Response> {
-    let mut latch = LATCHES.load(deps.storage, &latch_id)?;
+pub fn vote(deps: DepsMut, _env: Env, info: MessageInfo, latch_id: String) -> StdResult<Response> {
+    let mut latch = LATCHES.load(deps.storage, latch_id.clone())?;
 
     // Ensure the voter is a participant
     if !latch.participants.contains(&info.sender.to_string()) {
@@ -67,11 +45,11 @@ pub fn vote(
     }
 
     // Save latch state
-    LATCHES.save(deps.storage, &latch_id, &latch)?;
+    LATCHES.save(deps.storage, latch_id.clone(), &latch)?;
 
     Ok(Response::new()
         .add_attribute("method", "vote")
-        .add_attribute("latch_id", latch_id)
+        .add_attribute("latch_id", latch_id.clone())
         .add_attribute("is_open", latch.is_open.to_string()))
 }
 
@@ -83,7 +61,7 @@ pub fn update_threshold(
     latch_id: String,
     new_threshold: u64,
 ) -> StdResult<Response> {
-    let mut latch = LATCHES.load(deps.storage, &latch_id)?;
+    let mut latch = LATCHES.load(deps.storage, latch_id.clone())?;
 
     // Ensure sender has a role that allows threshold modification
     let config = CONFIG.load(deps.storage)?;
@@ -94,7 +72,7 @@ pub fn update_threshold(
 
     // Update threshold
     latch.threshold = new_threshold;
-    LATCHES.save(deps.storage, &latch_id, &latch)?;
+    LATCHES.save(deps.storage, latch_id.clone(), &latch)?;
 
     Ok(Response::new()
         .add_attribute("method", "update_threshold")
@@ -113,13 +91,16 @@ pub fn sync_latch(
     let mut config = CONFIG.load(deps.storage)?;
 
     // Update latch actor state
-    config.latch_actors.insert(latch_id.clone(), actor_state);
+    let result = config
+        .latch_actors
+        .save(deps.storage, latch_id.clone(), &actor_state)?;
+
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new()
         .add_attribute("method", "sync_latch")
-        .add_attribute("latch_id", latch_id)
-        .add_attribute("actor_state", actor_state))
+        .add_attribute("latch_id", latch_id.clone())
+        .add_attribute("actor_state", actor_state.clone()))
 }
 
 // Initialize the contract with roles and actors
@@ -137,9 +118,12 @@ pub fn init_contract(
 
     // Assign admin role
     CONFIG.update(deps.storage, |mut config| -> StdResult<_> {
-        config.roles.insert(admin.clone(), "admin".to_string());
+        //I don't undestand what you meant here, Freyja. Did you want to store contract owner as a role? Then we need to separate Roles from Species
+        config.roles.save(deps.storage, admin.clone());
         Ok(config)
     })?;
 
-    Ok(Response::new().add_attribute("method", "init_contract").add_attribute("admin", admin))
+    Ok(Response::new()
+        .add_attribute("method", "init_contract")
+        .add_attribute("admin", admin.clone()))
 }

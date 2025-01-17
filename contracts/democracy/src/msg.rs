@@ -1,13 +1,18 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct ExecuteMsg {
-    pub action: Action,
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Default)]
+pub struct Votes {
+    pub scenario_votes: Vec<(String, u128)>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub enum Action {
-    SubmitVote { scenario: String, budget: u128 }
+pub struct InstantiateMsg {
+    pub scenarios: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub struct ExecuteMsg {
+    pub action: Action,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]

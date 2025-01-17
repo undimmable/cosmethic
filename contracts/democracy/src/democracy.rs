@@ -4,6 +4,7 @@ use cosmwasm_std::{
     entry_point, from_binary, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     StdResult,
 };
+use std::fmt::Binary;
 
 pub const MAX_BUDGET: u128 = 1000;
 
@@ -30,7 +31,9 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> StdResult<Response> {
     match msg.action {
-        Action::SubmitVote { scenario, budget } => submit_vote(deps, info, scenario, budget),
+        //why did you add voting in storage? voting in latch?
+        ExecuteMsg::Vote { proposal_id, vote } => vote(deps, info, proposal_id, vote),
+        // Action::SubmitVote { scenario, budget } => submit_vote(deps, info, scenario, budget),
     }
 }
 
@@ -152,11 +155,12 @@ fn get_votes(deps: Deps) -> Vec<u8> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use cosmwasm_std::{
         from_binary,
         testing::{mock_dependencies, mock_env, mock_info},
     };
+    use crate::democracy::{execute, instantiate, query};
+    use crate::msg::{ExecuteMsg, InstantiateMsg, QueryAction, QueryMsg, Votes};
 
     #[test]
     fn test_instantiate() {
