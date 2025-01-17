@@ -5,6 +5,8 @@ edition = "2018"
 
 [dependencies]
 cosmwasm-std = "2.2.0"
+schemars = "0.8"
+cw-storage-plus = "2.0.0"
 serde = { version = "1.0.217", features = ["std"] }
 
 [dev-dependencies]

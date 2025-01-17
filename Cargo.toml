@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "contracts/cos",
+    "contracts/cosm",
     "contracts/met",
-    "contracts/hic",
+    "contracts/ethic",
     "contracts/space",
 ]
