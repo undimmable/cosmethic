@@ -1,6 +1,9 @@
+use cosm_crypto::{Signature, SigningKey};
 use cosmwasm_std::Addr;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+
+use serde::Deserialize;
 
 // Defines the force applied onto latches to open them
 #[derive(Serialize, Deserialize, Debug, PartialEq, JsonSchema, Clone)]
@@ -78,4 +81,11 @@ pub struct Sapient {
     transcendent: bool,
     omnipresent: bool,
     loving: bool,
+}
+
+impl SapienceLevel {
+    pub fn sign(&self, signing_key: &SigningKey) -> Result<Signature, StdError> {
+        let serialized = serde_json::to_vec_pretty(self)?;
+        Signature::sign(serialized.as_slice(), signing_key)
+    }
 }

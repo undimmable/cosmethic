@@ -7,5 +7,6 @@ edition = "2018"
 cosmwasm-std = "2.2.0"
 schemars = "0.8.21"
 serde = { version = "1.0.217", features = ["std"] }
+serde_json = "1.0.135"
 
 [dev-dependencies]
