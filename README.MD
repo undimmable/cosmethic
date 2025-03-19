@@ -1,4 +1,4 @@
-# Cosmethic
+# [Cosmethic](https://en.wikipedia.org/wiki/The_Enemy%27s_Cosmetique)
 
 ## Description
 
